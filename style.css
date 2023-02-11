@@ -1,0 +1,96 @@
+body {
+    user-select: none;
+    margin: 0;
+}
+
+p {
+    margin: 0;
+}
+
+#output {
+    width: calc(25em - 2em - 2 * 0.125em);
+    border: 0.125em solid black;
+    min-height: 3em;
+    background-color: white;
+    padding: 0 1em;
+    margin-bottom: 0.25em;
+    user-select: all;
+}
+
+#last {
+    color: gray;
+}
+
+.slide-up {
+    position: relative;
+    animation: slide-up 0.25s ease 0s 1 normal both;
+}
+
+@keyframes slide-up {
+    0% {
+        top: 1em;
+        color: black;
+    }
+
+    100% {
+        top: 0px;
+        color: gray;
+    }
+}
+
+.shake {
+    animation: shake 0.25s ease 0s 1 normal both;
+}
+
+@keyframes shake {
+    0% {
+        background-color: white;
+    }
+
+    10% {
+        background-color: lightcoral;
+    }
+
+    20% {
+        transform: translate(1%, 1%);
+    }
+
+    40% {
+        transform: translate(-1%, 1%);
+    }
+
+    60% {
+        transform: translate(1%, -1%);
+    }
+
+    80% {
+        transform: translate(-1%, -1%);
+    }
+
+    90%{
+        background-color: lightcoral;
+    }
+
+    100% {
+        background-color: white;
+    }
+
+}
+
+#window {
+    opacity: 0;
+}
+
+.fade-out {
+    animation: fade-out 0.25s linear 0s 1 normal both;
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
