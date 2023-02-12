@@ -1,203 +1,134 @@
-entered = "";
-last = "";
-const num_array = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
-const b_array = ["(", ")", "[", "]"]
-const oper_array = ["/", "*", "+", "-"]
+const priority = [
+    ["sin", "cos", "root"],
+    ["**"],
+    ["*", "/"],
+    ["+", "-"]
+]
 
-
-
-const functions = ["KeyR", "KeyP", "KeyS", "KeyC"]
-
-const solv_keys = ["Enter", "Equal", "NumpadEnter"]
-const to_enter = [...num_array, ...b_array, ...oper_array]
-
-const last_element = document.getElementById("last")
-const shake_element = document.getElementById("output")
-const window_element = document.getElementById("window")
-
-
-
-//key events
-document.addEventListener("keypress", function (event) {
-    let key = event.key
-    let code = event.code
-
-    console.log(event.code)
-
-    if (to_enter.includes(key)) {
-        add_text(key)
-    } else if (solv_keys.includes(code)) {
-        solv()
-    } else if (oper_array.includes(key)) {
-        add_op(key)
-    } else if (code == "KeyQ") {
-        clear_CA()
-    } else if (code == "KeyE") {
-        clear_C()
-    } else if (key == "(") {
-        add_loop()
-    } else if (key == ")") {
-        dec_loop()
+const code = {
+    "root": (input) => {
+        let param = input.slice(input.indexOf("[") + 1, input.indexOf("]"));
+        let number = input.slice(input.indexOf("]") + 1);
+        if (param.length == 0 || number.length == 0) { shake() }
+        else { return number ** (1 / param) }
+    },
+    "sin": (input) => {
+        let number = input.slice(3)
+        if (number.length == 0) { shake() }
+        else { return Math.sin(number * Math.PI / 180); }
+    },
+    "cos": (input) => {
+        let number = input.slice(3)
+        if (number.length == 0) { shake() }
+        else { return Math.cos(number * Math.PI / 180); }
+    },
+    "**": (input) => {
+        let index = input.indexOf("**")
+        let firstNumber = input.slice(0, index)
+        let secondNumber = input.slice(index + 2)
+        if (firstNumber.length == 0 || secondNumber.length == 0) { shake() }
+        else { return firstNumber ** secondNumber }
+    },
+    "*": (input) => {
+        let index = input.indexOf("*")
+        let firstNumber = input.slice(0, index)
+        let secondNumber = input.slice(index + 1)
+        if (firstNumber.length == 0 || secondNumber.length == 0) { shake() }
+        else { return firstNumber * secondNumber }
+    },
+    "/": (input) => {
+        let index = input.indexOf("/")
+        let firstNumber = input.slice(0, index)
+        let secondNumber = input.slice(index + 1)
+        if ((firstNumber.length == 0 || secondNumber.length == 0) || secondNumber == "0") { shake() }
+        else { return firstNumber / secondNumber }
+    },
+    "+": (input) => {
+        let index = input.indexOf("+")
+        let firstNumber = input.slice(0, index)
+        let secondNumber = input.slice(index + 1)
+        if (firstNumber.length == 0 || secondNumber.length == 0) { shake() }
+        else { return (firstNumber - 0) + (secondNumber - 0) }
+    },
+    "-": (input) => {
+        let index = input.indexOf("-")
+        let firstNumber = input.slice(0, index)
+        let secondNumber = input.slice(index + 1)
+        if (secondNumber.length == 0) { shake() }
+        else if (firstNumber == "0" || firstNumber.length == 0) { return "-" + secondNumber }
+        else { return firstNumber - secondNumber }
     }
-});
-
-function add_text(text) {
-    entered += text
-
-    draw()
-}
-
-function clear() {
-    num = ""
-    numpr = ['']
-    operpr = []
-    output = ""
-    loop = 0
-    draw()
-}
-
-function clear_CA() {
-
-    clear()
-}
-
-
-
-//draws top part
-function draw_last() {
-    let last_el = document.getElementById("last")
-    if (last != last_el.innerHTML) {
-        if (last_el.innerHTML != "") {
-            last_animation()
-        }
-        last_el.innerHTML = last
-
-    }
-}
-
-//draws black-colored part
-function draw() {
-    document.getElementById("window").innerHTML = entered
-}
-
-function add_b(text) {
-    output += text
-    draw()
-}
-
-function add_op(op) {
-    if (
-        (lastOf(operpr) == "/" && lastOf(num) == 0) ||
-        (lastOf(operpr) == "-" && op == "-") ||
-        (num == "-" && op == "-")
-    ) {
-        shake()
-        return
-    } else if (lastOf(numpr).toString() == "" && lastOf(operpr) != "-" && op == "-") {
-        console.log("add!")
-        output += "-"
-        num = "-"
-    } else if (lastOf(numpr).toString() != "") {
-        add_data("", numpr, loop)
-        output += " " + op + " "
-        console.log(op, operpr, loop)
-        add_data(op, operpr, loop)
-        num = ""
-    } else if (lastOf(numpr).toString == "" && num != "-" && lastOf(operpr) != op && lastOf(operpr) != undefined) {
-        output = output.substr(0, output.length - 2)
-        output += op + " "
-        change_data(op, operpr, loop)
-    } else {
-        shake()
-        return
-    }
-    draw()
 }
 
 function calculate(input) {
-    return mainCalculator(createList(input))
+    return mainCalculator(tokenizeString(input))
 }
 
 function mainCalculator(list) {
+    
     let expression = ""
     for (let i = 0; i < list.length; i++) {
         if (Array.isArray(list[i])) {
             expression += "" + mainCalculator(list[i])
-        }else{
+        } else {
             expression += list[i]
         }
     }
-    return calculateInOneBracket(expression)
+    
+    priority.forEach(operands => {
+        while (true) {
+            debugger;
+            let indexes = []
+            operands.forEach(operand => {
+                let index = expression.indexOf(operand)
+                if (index != -1) {
+                    indexes.push(index)
+                }
+            });
+
+            let index = Math.min(...indexes)
+
+            if (index != Infinity) {
+                let paste = betweenTwoOperands(expression, index)
+
+                let start = expression.indexOf(paste)
+
+                let firstPart = start == 0 ? "" : expression.slice(0, start)
+                let endPart = expression.slice(start + paste.length)
+
+                let answer;
+
+                if (paste.length == 0) {
+                    shake(); return;
+                } else {
+                    for (let key in code) {
+                        if (paste.includes(key)) {
+                            answer = code[key](paste)
+                            break;
+                        }
+                    }
+                }
+
+                if (answer == undefined) { answer = paste }
+
+                expression = firstPart + answer + endPart
+            }
+
+            break;
+        }
+    })
+
+    return expression
 }
 
-function calculateInOneBracket(input) {
-    while (true) {
-        index = Math.min(...(deleteMinusOne(
-            input.indexOf("root"),
-            input.indexOf("sin"),
-            input.indexOf("cos")
-        )))
-
-        if (index == Infinity) {
-            break;
+function deleteMinusOne(...list) {
+    let new_list = []
+    list.forEach(element => {
+        if (element != -1) {
+            new_list.push(element)
         }
-
-        input = prepareForSolve(input, index)
-
-
-    }
-    while (true) {
-        let index = input.indexOf("**");
-
-        if (index == -1) {
-            break;
-        }
-
-        input = prepareForSolve(input, index)
-    }
-    while (true) {
-        index = Math.min(...(deleteMinusOne(
-            input.indexOf("*"),
-            input.indexOf("/")
-        )))
-
-        if (index == Infinity) {
-            break;
-        }
-
-        input = prepareForSolve(input, index)
-    }
-    while (true) {
-        index = Math.min(...(deleteMinusOne(
-            input.indexOf("+"),
-            input.indexOf("-")
-        )))
-
-        if (index == Infinity) {
-            break;
-        }
-
-        input = prepareForSolve(input, index)
-    }
-
-    return input
-}
-
-function prepareForSolve(answer, index) {
-    let paste = betweenTwoOperands(answer, index)
-
-    let start = answer.indexOf(paste)
-
-    let firstPart = start == 0 ? "" : answer.slice(0, start)
-    let endPart = answer.slice(start + paste.length)
-
-    paste = solve(paste)
-
-
-
-    answer = firstPart + paste + endPart
-
-    return answer
+    });
+    return new_list;
 }
 
 
@@ -212,98 +143,6 @@ function getInside(rightPart, openedIndex, find) {
     return rightPart.substr(1, closedIndex - 1)
 
 }
-
-//solves expresions
-function solve(input) {
-    if (input.includes("root")) {
-        let param = input.slice(input.indexOf("[") + 1, input.indexOf("]"));
-
-        let number = input.slice(input.indexOf("]") + 1);
-
-        if (param.length == 0 || number.length == 0) {
-            shake()
-        } else { return number ** (1 / param) }
-    } else if (input.includes("sin")) {
-        let number = input.slice(3)
-
-        if (number.length == 0) {
-            shake()
-        } else {
-            return Math.sin(number * Math.PI / 180);
-        }
-    } else if (input.includes("cos")) {
-        let number = input.slice(3)
-
-        if (number.length == 0) {
-            shake()
-        } else {
-            return Math.cos(number * Math.PI / 180);
-        }
-    }
-    else if (input.includes("**")) {
-        let index = input.indexOf("**")
-        let firstNumber = input.slice(0, index)
-        let secondNumber = input.slice(index + 2)
-        if (firstNumber.length == 0 || secondNumber.length == 0) {
-            shake()
-        } else { return firstNumber ** secondNumber }
-    } else if (input.includes("*")) {
-        let index = input.indexOf("*")
-        let firstNumber = input.slice(0, index)
-        let secondNumber = input.slice(index + 1)
-        if (firstNumber.length == 0 || secondNumber.length == 0) {
-            shake()
-        } else { return firstNumber * secondNumber }
-    }
-    else if (input.includes("/")) {
-        let index = input.indexOf("/")
-        let firstNumber = input.slice(0, index)
-        let secondNumber = input.slice(index + 1)
-        if ((firstNumber.length == 0 || secondNumber.length == 0) || secondNumber == "0") {
-            shake()
-        } else { return firstNumber / secondNumber }
-    } else if (input.includes("+")) {
-        let index = input.indexOf("+")
-        let firstNumber = input.slice(0, index)
-        let secondNumber = input.slice(index + 1)
-        if (firstNumber.length == 0 || secondNumber.length == 0) {
-            shake()
-        } else { return (firstNumber - 0) + (secondNumber - 0) }
-    } else if (input.includes("-")) {
-        let index = input.indexOf("-")
-        let firstNumber = input.slice(0, index)
-        let secondNumber = input.slice(index + 1)
-        if (firstNumber.length == 0 || secondNumber.length == 0) {
-            shake()
-        } else { return firstNumber - secondNumber }
-    }
-
-    if (input.length != 0) {
-        return input;
-    }
-
-    shake()
-}
-
-// animations 
-shake_element.addEventListener("animationend", function () {
-    shake_element.classList.remove("shake")
-})
-
-function shake() {
-    shake_element.classList.add("shake")
-}
-
-last_element.addEventListener('animationend', () => {
-    last_element.classList.remove("slide-up")
-    window_element.classList.add("fade-out")
-});
-
-function last_animation() {
-    last_element.classList.add("slide-up")
-    window_element.classList.remove("fade-out")
-}
-//
 
 function getClosedBracket(string, find) {
     let round = 0
@@ -325,7 +164,7 @@ function getClosedBracket(string, find) {
     return -1
 }
 
-function createList(input) {
+function tokenizeString(input) {
     let list = [];
 
     let look = true;
@@ -350,20 +189,20 @@ function createList(input) {
 
         let inside = getInside(rightPart.slice(rightPart.indexOf("(")), rightPart.indexOf("("), "(")
 
-        list.push(createList(inside))
+        list.push(tokenizeString(inside))
 
         if (closedIndex == rightPart.length - 1) {
             look = 0;
         } else {
             let openRightIndex = rightPart.indexOf("(", closedIndex + 1);
-            if(openRightIndex == -1){
+            if (openRightIndex == -1) {
                 list.push(rightPart.slice(closedIndex + 1))
                 look = 0
-            }else{
+            } else {
                 list.push(rightPart.slice(inside.length + 2, openRightIndex))
                 rightPart = rightPart.slice(openRightIndex)
             }
-            
+
         }
     }
 
@@ -371,15 +210,8 @@ function createList(input) {
 
 }
 
-function deleteMinusOne(...list) {
-    let new_list = []
-    list.forEach(element => {
-        if (element != -1) {
-            new_list.push(element)
-        }
-    });
-
-    return new_list;
+function newTokenizeString(input) {
+    
 }
 
 function betweenTwoOperands(input, index) {
@@ -406,7 +238,7 @@ function betweenTwoOperands(input, index) {
 
 String.prototype.reverseIndexOf = function (searchElement, index = -1) {
     if (index == -1) { index == this.length - 1 }
-    if (index >= index.length) { return Error("index is greater than length of String") }
+    if (index >= index.length) { console.error(Error("index is greater than length of String")); return; }
     for (let i = index; i >= 0; i--) {
         if (this[i] === searchElement) {
             return i;
@@ -414,3 +246,14 @@ String.prototype.reverseIndexOf = function (searchElement, index = -1) {
     }
     return -1;
 };
+
+function addNewOperand(name, prior, func, insert = false) {
+    if (insert) {
+        priority.splice(prior, 0, [name])
+    } else {
+        priority[prior].push(name)
+    }
+
+    code[name] = func
+
+}
